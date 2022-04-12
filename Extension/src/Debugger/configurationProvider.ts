@@ -688,7 +688,7 @@ export class DebugConfigurationProvider implements vscode.DebugConfigurationProv
             configuration.preLaunchTask = undefined;
         }
         try {
-            // Check if the debug configuration exists in launch.json.
+            // Check if the debug configuration exists.
             await this.checkDebugConfigExists(configuration.name);
             try {
                 await vscode.debug.startDebugging(folder, configuration, {noDebug: !debugModeOn});
@@ -698,7 +698,6 @@ export class DebugConfigurationProvider implements vscode.DebugConfigurationProv
             }
         } catch (e) {
             try {
-                // await vscode.debug.startDebugging(folder, configuration, {noDebug: !debugModeOn});
                 await vscode.debug.startDebugging(folder, configuration, {noDebug: !debugModeOn});
                 Telemetry.logDebuggerEvent(debuggerEvent, { "debugType": debugType, "folderMode": folderMode, "config": "noLaunchConfig", "success": "true" });
             } catch (e) {
