@@ -172,7 +172,6 @@ export class DebugConfigurationProvider implements vscode.DebugConfigurationProv
                     return undefined; // Stop debugging
                 }
             }
-            config.program = "D:\\tests\\multiroot\\Root4\\build\\r4_test1.exe";
             // resolveDebugConfigurationWithSubstitutedVariables will be automatically called after this return.
             return config;
         }
