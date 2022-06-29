@@ -4,10 +4,18 @@
             "Component": {
                 "Type": "git",
                 "Git": {
-                    "RepositoryUrl": "https://github.com/llvm/llvm-project",
-                    "CommitHash": "0d44201451f03ba907cdb268ddddfc3fa38a0ebd"
-                },
-                "DevelopmentDependency": true
+                    "RepositoryUrl": "https://github.com/llvm/llvm-project/tree/release/14.x/clang",
+                    "CommitHash": "3f43d803382d57e3fc010ca19833077d1023e9c9"
+                }
+            }
+        },
+        {
+            "Component": {
+                "Type": "git",
+                "Git": {
+                    "RepositoryUrl": "https://github.com/llvm/llvm-project/tree/release/14.x/clang-tools-extra",
+                    "CommitHash": "3f43d803382d57e3fc010ca19833077d1023e9c9"
+                }
             }
         },
         {
@@ -18,7 +26,33 @@
                     "CommitHash": "2388bd74133bc21eac59b2e2bf97f2a30770a315"
                 }
             }
-        }
+        },
+        {
+			"Component":
+			{
+				"Type": "other",
+				"Other":
+				{
+					"Name": "SQLite",
+					"Version": "3.37.2",
+					"DownloadUrl": "https://sqlite.org/2022/sqlite-amalgamation-3370200.zip"
+				}
+			},
+			"DevelopmentDependency": false
+		},
+        {
+			"Component":
+			{
+				"Type": "other",
+				"Other":
+				{
+					"Name": "GSL",
+					"Version": "4.0.0",
+					"DownloadUrl": "https://github.com/microsoft/GSL/archive/refs/tags/v4.0.0.zip"
+				}
+			},
+			"DevelopmentDependency": false
+		}
     ],
     "Version": 1
 }
