@@ -81,15 +81,23 @@ export function createProtocolFilter(): Middleware {
             me.onDidChangeTextDocument(textDocumentChangeEvent);
             me.notifyWhenLanguageClientReady(() => sendMessage(textDocumentChangeEvent));
         },
-        willSave: defaultHandler,
+        willSave: async (data, callback: (data: any) => void) => {
+            console.log("willSave");
+            clients.ActiveClient.notifyWhenLanguageClientReady(() => callback(data));
+        },
         willSaveWaitUntil: async (event, sendMessage) => {
+            console.time("willSaveWaitUntil");
+            let result: any;
             const me: Client = clients.getClientFor(event.document.uri);
             if (me.TrackedDocuments.has(event.document)) {
                 // Don't use me.requestWhenReady or notifyWhenLanguageClientReady;
                 // otherwise, the message can be delayed too long.
-                return sendMessage(event);
+                result = sendMessage(event);
+            } else {
+                result = Promise.resolve([]);
             }
-            return Promise.resolve([]);
+            console.timeEnd("willSaveWaitUntil");
+            return result;
         },
         didSave: defaultHandler,
         didClose: async (document, sendMessage) => {
