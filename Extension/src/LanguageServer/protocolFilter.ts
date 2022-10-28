@@ -96,8 +96,9 @@ export function createProtocolFilter(): Middleware {
             } else {
                 result = Promise.resolve([]);
             }
-            console.timeEnd("willSaveWaitUntil");
-            return result;
+            return result.then(() => {
+                console.timeEnd("willSaveWaitUntil");
+            });
         },
         didSave: defaultHandler,
         didClose: async (document, sendMessage) => {
