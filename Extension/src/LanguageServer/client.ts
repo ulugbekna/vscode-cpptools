@@ -497,6 +497,21 @@ interface IntervalTimerParams {
     freeMemory: number;
 };
 
+interface ValidatableBuffer {
+    uri: string;
+    text: string;
+};
+
+interface ValidateBuffersParams {
+    buffers: ValidatableBuffer[];
+};
+
+interface ValidateBuffersResult {
+    missingBuffers: string[];
+    mismatchingOpenFileBuffers: string[];
+    mismatchingClosedFileBuffers: string[];
+};
+
 export interface TextDocumentWillSaveParams {
     textDocument: TextDocumentIdentifier;
     reason: vscode.TextDocumentSaveReason;
@@ -531,6 +546,7 @@ export const FormatOnTypeRequest: RequestType<FormatParams, TextEdit[], void> = 
 const CreateDeclarationOrDefinitionRequest: RequestType<CreateDeclarationOrDefinitionParams, CreateDeclarationOrDefinitionResult, void> = new RequestType<CreateDeclarationOrDefinitionParams, CreateDeclarationOrDefinitionResult, void>('cpptools/createDeclDef');
 const GoToDirectiveInGroupRequest: RequestType<GoToDirectiveInGroupParams, Position | undefined, void> = new RequestType<GoToDirectiveInGroupParams, Position | undefined, void>('cpptools/goToDirectiveInGroup');
 const GenerateDoxygenCommentRequest: RequestType<GenerateDoxygenCommentParams, GenerateDoxygenCommentResult | undefined, void> = new RequestType<GenerateDoxygenCommentParams, GenerateDoxygenCommentResult, void>('cpptools/generateDoxygenComment');
+const ValidateBuffersRequest: RequestType<ValidateBuffersParams, ValidateBuffersResult, void> = new RequestType<ValidateBuffersParams, ValidateBuffersResult, void>('cpptools/validateBuffers');
 
 // Notifications to the server
 const DidOpenNotification: NotificationType<DidOpenTextDocumentParams> = new NotificationType<DidOpenTextDocumentParams>('textDocument/didOpen');
@@ -702,6 +718,7 @@ export interface Client {
     updateCustomBrowseConfiguration(requestingProvider?: CustomConfigurationProvider1): Thenable<void>;
     provideCustomConfiguration(docUri: vscode.Uri, requestFile?: string, replaceExisting?: boolean): Promise<void>;
     logDiagnostics(): Promise<void>;
+    validateBuffers(): Promise<void>;
     rescanFolder(): Promise<void>;
     toggleReferenceResultsView(): void;
     setCurrentConfigName(configurationName: string): Thenable<void>;
@@ -1582,6 +1599,33 @@ export class DefaultClient implements Client {
         }
         diagnosticsChannel.appendLine(`${header}${version}${configJson}${this.browseConfigurationLogging}${configurationLoggingStr}${response.diagnostics}`);
         diagnosticsChannel.show(false);
+    }
+
+    public async validateBuffers(): Promise<void> {
+        const buffers: ValidatableBuffer[] = [];
+        vscode.workspace.textDocuments.forEach((e) => {
+            if (e.uri.scheme === "file" && (e.languageId === "c" || e.languageId === "cpp" || e.languageId === "cuda-cpp")) {
+                const validatableBuffer: ValidatableBuffer = {
+                    uri: e.uri.toString(),
+                    text: e.getText()
+                };
+                buffers.push(validatableBuffer);
+            }
+        });
+        const params: ValidateBuffersParams = {
+            buffers: buffers
+        };
+        const result: ValidateBuffersResult = await this.requestWhenReady(() => this.languageClient.sendRequest(ValidateBuffersRequest, params));
+        const out: Logger = getOutputChannelLogger();
+        result.mismatchingOpenFileBuffers.forEach((e) => {
+            out.appendLine("BUFFER VALIDATION FAILURE (open file): " + e);
+        });
+        result.mismatchingClosedFileBuffers.forEach((e) => {
+            out.appendLine("BUFFER VALIDATION FAILURE (closed file): " + e);
+        });
+        result.missingBuffers.forEach((e) => {
+            out.appendLine("BUFFER VALIDATION FAILURE (missing file): " + e);
+        });
     }
 
     public async rescanFolder(): Promise<void> {
@@ -3218,6 +3262,7 @@ class NullClient implements Client {
     updateCustomBrowseConfiguration(requestingProvider?: CustomConfigurationProvider1): Thenable<void> { return Promise.resolve(); }
     provideCustomConfiguration(docUri: vscode.Uri, requestFile?: string, replaceExisting?: boolean): Promise<void> { return Promise.resolve(); }
     logDiagnostics(): Promise<void> { return Promise.resolve(); }
+    validateBuffers(): Promise<void> { return Promise.resolve(); }
     rescanFolder(): Promise<void> { return Promise.resolve(); }
     toggleReferenceResultsView(): void { }
     setCurrentConfigName(configurationName: string): Thenable<void> { return Promise.resolve(); }

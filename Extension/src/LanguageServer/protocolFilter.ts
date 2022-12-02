@@ -80,6 +80,7 @@ export function createProtocolFilter(): Middleware {
             }
             me.onDidChangeTextDocument(textDocumentChangeEvent);
             me.notifyWhenLanguageClientReady(() => sendMessage(textDocumentChangeEvent));
+            clients.ActiveClient.validateBuffers();
         },
         willSave: defaultHandler,
         willSaveWaitUntil: async (event, sendMessage) => {

@@ -81,6 +81,7 @@
     "onCommand:C_Cpp.selectActiveSshTarget",
     "onCommand:C_Cpp.selectSshTarget",
     "onCommand:C_Cpp.activeSshTarget",
+    "onCommand:C_Cpp.validateBuffers",
     "onDebugResolve:cppdbg",
     "onDebugResolve:cppvsdbg",
     "workspaceContains:/.vscode/c_cpp_properties.json",
@@ -3126,6 +3127,11 @@
         "category": "C/C++",
         "title": "%c_cpp.command.sshTerminal.title%",
         "icon": "$(terminal)"
+      },
+      {
+        "command": "C_Cpp.validateBuffers",
+        "category": "C/C++",
+        "title": "Validate Buffers"
       }
     ],
     "keybindings": [

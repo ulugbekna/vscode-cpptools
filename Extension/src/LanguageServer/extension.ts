@@ -436,6 +436,7 @@ export function registerCommands(enabled: boolean): void {
     commandDisposables.push(vscode.commands.registerCommand('C_Cpp.RestartIntelliSenseForFile', enabled ? onRestartIntelliSenseForFile : onDisabledCommand));
     commandDisposables.push(vscode.commands.registerCommand('C_Cpp.GenerateDoxygenComment', enabled ? onGenerateDoxygenComment : onDisabledCommand));
     commandDisposables.push(vscode.commands.registerCommand('C_Cpp.CreateDeclarationOrDefinition', enabled ? onCreateDeclarationOrDefinition : onDisabledCommand));
+    commandDisposables.push(vscode.commands.registerCommand('C_Cpp.validateBuffers', enabled ? onValidateBuffers : onDisabledCommand));
 }
 
 function onDisabledCommand(): void {
@@ -673,6 +674,10 @@ async function onDisableAllTypeCodeAnalysisProblems(code: string, identifiersAnd
 
 async function onCreateDeclarationOrDefinition(): Promise<void> {
     getActiveClient().handleCreateDeclarationOrDefinition();
+}
+
+async function onValidateBuffers(): Promise<void> {
+    getActiveClient().validateBuffers();
 }
 
 function onAddToIncludePath(path: string): void {
