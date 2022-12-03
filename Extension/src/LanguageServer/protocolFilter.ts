@@ -74,6 +74,7 @@ export function createProtocolFilter(): Middleware {
             }
         },
         didChange: async (textDocumentChangeEvent, sendMessage) => {
+            clients.ActiveClient.validateBuffers();
             const me: Client = clients.getClientFor(textDocumentChangeEvent.document.uri);
             if (!me.TrackedDocuments.has(textDocumentChangeEvent.document)) {
                 processDelayedDidOpen(textDocumentChangeEvent.document);

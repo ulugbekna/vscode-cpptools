@@ -506,12 +506,6 @@ interface ValidateBuffersParams {
     buffers: ValidatableBuffer[];
 };
 
-interface ValidateBuffersResult {
-    missingBuffers: string[];
-    mismatchingOpenFileBuffers: string[];
-    mismatchingClosedFileBuffers: string[];
-};
-
 export interface TextDocumentWillSaveParams {
     textDocument: TextDocumentIdentifier;
     reason: vscode.TextDocumentSaveReason;
@@ -546,7 +540,6 @@ export const FormatOnTypeRequest: RequestType<FormatParams, TextEdit[], void> = 
 const CreateDeclarationOrDefinitionRequest: RequestType<CreateDeclarationOrDefinitionParams, CreateDeclarationOrDefinitionResult, void> = new RequestType<CreateDeclarationOrDefinitionParams, CreateDeclarationOrDefinitionResult, void>('cpptools/createDeclDef');
 const GoToDirectiveInGroupRequest: RequestType<GoToDirectiveInGroupParams, Position | undefined, void> = new RequestType<GoToDirectiveInGroupParams, Position | undefined, void>('cpptools/goToDirectiveInGroup');
 const GenerateDoxygenCommentRequest: RequestType<GenerateDoxygenCommentParams, GenerateDoxygenCommentResult | undefined, void> = new RequestType<GenerateDoxygenCommentParams, GenerateDoxygenCommentResult, void>('cpptools/generateDoxygenComment');
-const ValidateBuffersRequest: RequestType<ValidateBuffersParams, ValidateBuffersResult, void> = new RequestType<ValidateBuffersParams, ValidateBuffersResult, void>('cpptools/validateBuffers');
 
 // Notifications to the server
 const DidOpenNotification: NotificationType<DidOpenTextDocumentParams> = new NotificationType<DidOpenTextDocumentParams>('textDocument/didOpen');
@@ -575,6 +568,7 @@ const FindAllReferencesNotification: NotificationType<FindAllReferencesParams> =
 const RenameNotification: NotificationType<RenameParams> = new NotificationType<RenameParams>('cpptools/rename');
 const DidChangeSettingsNotification: NotificationType<SettingsParams> = new NotificationType<SettingsParams>('cpptools/didChangeSettings');
 const InitializationNotification: NotificationType<InitializationOptions> = new NotificationType<InitializationOptions>('cpptools/initialize');
+const ValidateBuffersNotification: NotificationType<ValidateBuffersParams> = new NotificationType<ValidateBuffersParams>('cpptools/validateBuffers');
 
 const CodeAnalysisNotification: NotificationType<CodeAnalysisParams> = new NotificationType<CodeAnalysisParams>('cpptools/runCodeAnalysis');
 const PauseCodeAnalysisNotification: NotificationType<void> = new NotificationType<void>('cpptools/pauseCodeAnalysis');
@@ -1615,17 +1609,8 @@ export class DefaultClient implements Client {
         const params: ValidateBuffersParams = {
             buffers: buffers
         };
-        const result: ValidateBuffersResult = await this.requestWhenReady(() => this.languageClient.sendRequest(ValidateBuffersRequest, params));
-        const out: Logger = getOutputChannelLogger();
-        result.mismatchingOpenFileBuffers.forEach((e) => {
-            out.appendLine("BUFFER VALIDATION FAILURE (open file): " + e);
-        });
-        result.mismatchingClosedFileBuffers.forEach((e) => {
-            out.appendLine("BUFFER VALIDATION FAILURE (closed file): " + e);
-        });
-        result.missingBuffers.forEach((e) => {
-            out.appendLine("BUFFER VALIDATION FAILURE (missing file): " + e);
-        });
+        await this.awaitUntilLanguageClientReady();
+        this.languageClient.sendNotification(ValidateBuffersNotification, params);
     }
 
     public async rescanFolder(): Promise<void> {
