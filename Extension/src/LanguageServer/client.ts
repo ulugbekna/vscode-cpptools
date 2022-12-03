@@ -506,6 +506,10 @@ interface ValidateBuffersParams {
     buffers: ValidatableBuffer[];
 };
 
+interface OriginalBufferParams {
+    buffer: string;
+};
+
 export interface TextDocumentWillSaveParams {
     textDocument: TextDocumentIdentifier;
     reason: vscode.TextDocumentSaveReason;
@@ -564,6 +568,7 @@ const RescanFolderNotification: NotificationType<void> = new NotificationType<vo
 export const RequestReferencesNotification: NotificationType<void> = new NotificationType<void>('cpptools/requestReferences');
 export const CancelReferencesNotification: NotificationType<void> = new NotificationType<void>('cpptools/cancelReferences');
 const FinishedRequestCustomConfig: NotificationType<FinishedRequestCustomConfigParams> = new NotificationType<FinishedRequestCustomConfigParams>('cpptools/finishedRequestCustomConfig');
+const OriginalBuffer: NotificationType<OriginalBufferParams> = new NotificationType<OriginalBufferParams>('cpptools/originalBuffer');
 const FindAllReferencesNotification: NotificationType<FindAllReferencesParams> = new NotificationType<FindAllReferencesParams>('cpptools/findAllReferences');
 const RenameNotification: NotificationType<RenameParams> = new NotificationType<RenameParams>('cpptools/rename');
 const DidChangeSettingsNotification: NotificationType<SettingsParams> = new NotificationType<SettingsParams>('cpptools/didChangeSettings');
@@ -588,6 +593,7 @@ const CompileCommandsPathsNotification: NotificationType<CompileCommandsPaths> =
 const ReferencesNotification: NotificationType<refs.ReferencesResult> = new NotificationType<refs.ReferencesResult>('cpptools/references');
 const ReportReferencesProgressNotification: NotificationType<refs.ReportReferencesProgressNotification> = new NotificationType<refs.ReportReferencesProgressNotification>('cpptools/reportReferencesProgress');
 const RequestCustomConfig: NotificationType<string> = new NotificationType<string>('cpptools/requestCustomConfig');
+const RequestOriginalBuffer: NotificationType<string> = new NotificationType<string>('cpptools/requestOriginalBuffer');
 const PublishIntelliSenseDiagnosticsNotification: NotificationType<PublishIntelliSenseDiagnosticsParams> = new NotificationType<PublishIntelliSenseDiagnosticsParams>('cpptools/publishIntelliSenseDiagnostics');
 const PublishRefactorDiagnosticsNotification: NotificationType<PublishRefactorDiagnosticsParams> = new NotificationType<PublishRefactorDiagnosticsParams>('cpptools/publishRefactorDiagnostics');
 const ShowMessageWindowNotification: NotificationType<ShowMessageWindowParams> = new NotificationType<ShowMessageWindowParams>('cpptools/showMessageWindow');
@@ -1752,6 +1758,17 @@ export class DefaultClient implements Client {
         await this.provideCustomConfiguration(vscode.Uri.file(requestFile), requestFile);
     }
 
+    private async requestOriginalBuffer(requestFile: string): Promise<void> {
+        vscode.workspace.textDocuments.forEach((e) => {
+            if (e.uri.toString() === requestFile) {
+                const params: OriginalBufferParams = {
+                    buffer: e.getText()
+                };
+                this.languageClient.sendNotification(OriginalBuffer, params);
+            }
+        });
+    }
+
     private isExternalHeader(uri: vscode.Uri): boolean {
         const rootUri: vscode.Uri | undefined = this.RootUri;
         return !rootUri || (util.isHeaderFile(uri) && !uri.toString().startsWith(rootUri.toString()));
@@ -1928,6 +1945,7 @@ export class DefaultClient implements Client {
                 defaultClient.handleRequestCustomConfig(requestFile);
             }
         });
+        this.languageClient.onNotification(RequestOriginalBuffer, (requestFile: string) => this.requestOriginalBuffer(requestFile));
         this.languageClient.onNotification(PublishIntelliSenseDiagnosticsNotification, publishIntelliSenseDiagnostics);
         this.languageClient.onNotification(PublishRefactorDiagnosticsNotification, publishRefactorDiagnostics);
         RegisterCodeAnalysisNotifications(this.languageClient);

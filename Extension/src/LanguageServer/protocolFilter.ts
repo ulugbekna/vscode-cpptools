@@ -74,14 +74,12 @@ export function createProtocolFilter(): Middleware {
             }
         },
         didChange: async (textDocumentChangeEvent, sendMessage) => {
-            clients.ActiveClient.validateBuffers();
             const me: Client = clients.getClientFor(textDocumentChangeEvent.document.uri);
             if (!me.TrackedDocuments.has(textDocumentChangeEvent.document)) {
                 processDelayedDidOpen(textDocumentChangeEvent.document);
             }
             me.onDidChangeTextDocument(textDocumentChangeEvent);
             me.notifyWhenLanguageClientReady(() => sendMessage(textDocumentChangeEvent));
-            clients.ActiveClient.validateBuffers();
         },
         willSave: defaultHandler,
         willSaveWaitUntil: async (event, sendMessage) => {
