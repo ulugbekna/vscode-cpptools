@@ -10,6 +10,7 @@ import { Client } from './client';
 import * as vscode from 'vscode';
 import { CppSettings } from './settings';
 import { clients, onDidChangeActiveTextEditor, processDelayedDidOpen } from './extension';
+import { getOutputChannelLogger, Logger } from '../logger';
 
 export function createProtocolFilter(): Middleware {
     // Disabling lint for invoke handlers
@@ -37,6 +38,8 @@ export function createProtocolFilter(): Middleware {
                         const finishDidOpen = (doc: vscode.TextDocument) => {
                             me.provideCustomConfiguration(doc.uri, undefined);
                             me.notifyWhenLanguageClientReady(() => {
+                                const out: Logger = getOutputChannelLogger();
+                                out.appendLine("protocolFilter - sending didOpen message via sendMessage(doc)");
                                 sendMessage(doc);
                                 me.onDidOpenTextDocument(doc);
                                 if (editor && editor === vscode.window.activeTextEditor) {

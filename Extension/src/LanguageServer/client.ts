@@ -1834,6 +1834,8 @@ export class DefaultClient implements Client {
             }
         };
         this.updateActiveDocumentTextOptions();
+        const out: Logger = getOutputChannelLogger();
+        out.appendLine("takeOwnership - sending didOpen message");
         this.notifyWhenLanguageClientReady(() => this.languageClient.sendNotification(DidOpenNotification, params));
         this.trackedDocuments.add(document);
     }
