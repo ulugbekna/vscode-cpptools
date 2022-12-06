@@ -9,7 +9,7 @@ import { Middleware } from 'vscode-languageclient';
 import { Client } from './client';
 import * as vscode from 'vscode';
 import { CppSettings } from './settings';
-import { clients, onDidChangeActiveTextEditor, processDelayedDidOpen } from './extension';
+import { clients, onDidChangeActiveTextEditor } from './extension';
 import { getOutputChannelLogger, Logger } from '../logger';
 
 export function createProtocolFilter(): Middleware {
@@ -37,15 +37,13 @@ export function createProtocolFilter(): Middleware {
                         me.TrackedDocuments.add(document);
                         const finishDidOpen = (doc: vscode.TextDocument) => {
                             me.provideCustomConfiguration(doc.uri, undefined);
-                            me.notifyWhenLanguageClientReady(() => {
-                                const out: Logger = getOutputChannelLogger();
-                                out.appendLine("protocolFilter - sending didOpen message via sendMessage(doc)");
-                                sendMessage(doc);
-                                me.onDidOpenTextDocument(doc);
-                                if (editor && editor === vscode.window.activeTextEditor) {
-                                    onDidChangeActiveTextEditor(editor);
-                                }
-                            });
+                            const out: Logger = getOutputChannelLogger();
+                            out.appendLine("protocolFilter - sending didOpen message via sendMessage(doc)");
+                            sendMessage(doc);
+                            me.onDidOpenTextDocument(doc);
+                            if (editor && editor === vscode.window.activeTextEditor) {
+                                onDidChangeActiveTextEditor(editor);
+                            }
                         };
                         let languageChanged: boolean = false;
                         if ((document.uri.path.endsWith(".C") || document.uri.path.endsWith(".H")) && document.languageId === "c") {
@@ -79,10 +77,12 @@ export function createProtocolFilter(): Middleware {
         didChange: async (textDocumentChangeEvent, sendMessage) => {
             const me: Client = clients.getClientFor(textDocumentChangeEvent.document.uri);
             if (!me.TrackedDocuments.has(textDocumentChangeEvent.document)) {
-                processDelayedDidOpen(textDocumentChangeEvent.document);
+                console.log("!!!!!!!!!!!!!!!!!!!!!! We shouldn't get here.  didChange should not occur until didOpen has been processed.");
+                // processDelayedDidOpen(textDocumentChangeEvent.document);
             }
             me.onDidChangeTextDocument(textDocumentChangeEvent);
-            me.notifyWhenLanguageClientReady(() => sendMessage(textDocumentChangeEvent));
+            sendMessage(textDocumentChangeEvent);
+            // me.notifyWhenLanguageClientReady(() => sendMessage(textDocumentChangeEvent));
         },
         willSave: defaultHandler,
         willSaveWaitUntil: async (event, sendMessage) => {
@@ -100,7 +100,8 @@ export function createProtocolFilter(): Middleware {
             if (me.TrackedDocuments.has(document)) {
                 me.onDidCloseTextDocument(document);
                 me.TrackedDocuments.delete(document);
-                me.notifyWhenLanguageClientReady(() => sendMessage(document));
+                sendMessage(document);
+                // me.notifyWhenLanguageClientReady(() => sendMessage(document));
             }
         },
 
