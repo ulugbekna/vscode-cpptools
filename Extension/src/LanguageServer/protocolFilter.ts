@@ -36,6 +36,7 @@ export function createProtocolFilter(): Middleware {
                         me.TrackedDocuments.add(document);
                         const finishDidOpen = async (doc: vscode.TextDocument) => {
                             await me.provideCustomConfiguration(doc.uri, undefined);
+                            await clients.ActiveClient.awaitUntilLanguageClientReady();
                             const out: Logger = getOutputChannelLogger();
                             out.appendLine("protocolFilter - sending didOpen message via sendMessage(doc)");
                             await sendMessage(doc);
