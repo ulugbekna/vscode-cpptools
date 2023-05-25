@@ -1929,7 +1929,7 @@ export class DefaultClient implements Client {
                     hasCompleted = true;
                     this.sendCustomBrowseConfiguration(null, undefined, Version.v0, true);
                     if (currentProvider.version >= Version.v2) {
-                        console.warn("Configuration Provider timed out in {0}ms.", configProviderTimeout);
+                        console.warn(`Configuration Provider timed out in ${0} ms.`, configProviderTimeout);
                         this.resumeParsing();
                     }
                 }
